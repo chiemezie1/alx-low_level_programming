@@ -1,3 +1,2 @@
 #!/bin/bash
-#
-include<stdio.h> c>$CFILE
+#include<stdio.h> c>$CFILE
