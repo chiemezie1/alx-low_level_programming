@@ -1,8 +1,13 @@
-include <stdio.h>
+# include <stdio.h>
 
-/* my put out program*/
-int main(void) {
-       	puts("Programming is like building a multilingual puzzle\n"); 
-	return (0);
-}
-	
+/** main entry
+ *
+ * *returne (0);
+ *
+ * */
+
+int main(void) { puts("Programming is like building a multilingual puzzle\n"); 
+
+	return (0); }
+
+
