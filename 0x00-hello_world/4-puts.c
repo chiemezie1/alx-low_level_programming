@@ -1,7 +1,9 @@
 # include <stdio.h>
-
-int main(void) 
-{ puts("Programming is like building a multilingual puzzle\n"); 
+/**
+ * myfirst code on c
+ * will end with reture (0);
+ */
+int main(void) { puts("Programming is like building a multilingual puzzle\n"); 
 
 	return (0); }
 
