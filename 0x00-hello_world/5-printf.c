@@ -1,7 +1,9 @@
 #include <stdio.h>
-/** heremy coment goes
+
+/** 
+ * heremy coment goes
  * 
- * this code will return 0
+ * return 0
  */
 	int main(void)
 	{
