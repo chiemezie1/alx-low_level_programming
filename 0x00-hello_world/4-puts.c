@@ -1,11 +1,10 @@
 #include <stdio.h>
-/** a program meant to putoutworeds
- *
- * return 0
- * 
- */
+/* this program is a program
+*
+*returne 
+*/
 int main(void)
 {
-	puts("\"Programming is like building a multilingual puzzle\n");
-	reture 0;
+	puts("\"Programming is like building a multilingual puzzle/n");
+	return 0;
 }
