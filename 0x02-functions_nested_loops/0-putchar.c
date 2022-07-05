@@ -1,10 +1,9 @@
 #include <stdio.h>
 /**
- * a program that prints out _putchar
+ *main - print out putchar
  *
- *it returne 0 after the function is done
+ *Return: Always 0.
  */
-
 int main(void)
 {
 	putchar("putchar");
