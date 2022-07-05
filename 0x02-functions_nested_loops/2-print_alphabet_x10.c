@@ -6,16 +6,19 @@
  *Return: Always 0.
  */
 void print_alphabet_x10(void);
-{	int x = 0;
+{
 	char ch;
-	while (x < 9)
-	{	
-		for (ch = "a"; ch <= "z"; ch++)
+	int x = 0;
+
+	while (x <= 9)
+	{
+		for (ch = 'a'; ch <= 'z'; ch++)
 		{
-			_putchar ("%c ", ch);
-			_putchar("\n");
+			_putchar(ch);
 		}
-		x++;
+
+		_putchar('\n');
+
+		i++;
 	}
-	return (0);
 }
