@@ -7,11 +7,11 @@
  *Return: Always 0.
  */
 int _islower(int c);
-{	int ch;
-	for (ch >= 97 && ch <= 122)
+{
+	if (ch >= 97 && ch <= 122)
 	{
 		return (1);
-	{
-	return (0);
+	}
 
+	return (0);
 }
