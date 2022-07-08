@@ -1,17 +1,15 @@
 #include "main.h"
 /**
- *main - check code for putout
+ * _islower - Checks for lowercase character
+ * @c: The character to be checked
  *
- *void funtion
- *
- *Return: Always 0.
+ * Return: 1 for lowercase character or 0 for anything else
  */
-int _islower(int c);
+int _islower(int c)
 {
-	if (ch >= 97 && ch <= 122)
+	if (c >= 97 && c <= 122)
 	{
 		return (1);
 	}
-
 	return (0);
 }
