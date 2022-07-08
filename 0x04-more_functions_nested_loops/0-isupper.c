@@ -15,6 +15,6 @@ int _isupper(int c)
 }
 int main(void)
 {
-	_isupper ('x');
+	_isupper('A');
 	return (0);
 }
