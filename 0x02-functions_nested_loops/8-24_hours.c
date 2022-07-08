@@ -6,11 +6,11 @@
  *
  *Return: Always 0.
  */
-void print_alphabet(void);
-{	char ch;
-	for (ch = "a"; ch <= "z"; ch++)
+void jack_bauer(void);
+{	float time;
+	for (time = 00:00 && time <= 23:59)
 	{
-		putchar ("%c ", ch);
+		putchar ("%f ", time);
 		putchar("\n");
 	}
 	return (0);
