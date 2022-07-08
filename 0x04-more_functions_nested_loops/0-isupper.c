@@ -13,3 +13,8 @@ int _isupper(int c)
 	else
 		return (0);
 }
+int main(void)
+{
+	_isupper('A');
+	return (0);
+}
