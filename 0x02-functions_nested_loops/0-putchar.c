@@ -1,4 +1,4 @@
-# include "main.h"
+#include <unistd.h>
 /**
  * main - fuction
  * 
@@ -15,4 +15,8 @@ int main(void)
 	_putchar('a');
 	_putchar('r');
 	return (0);
+}
+int _putchar(char c)
+{
+	return (write(1, &c, 1));
 }
