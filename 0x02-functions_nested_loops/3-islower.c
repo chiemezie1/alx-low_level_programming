@@ -1,4 +1,4 @@
-#include <stidio.h>
+#include "main.h"
 /**
  *main - check code for putout
  *
