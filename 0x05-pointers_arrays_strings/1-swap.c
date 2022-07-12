@@ -8,8 +8,9 @@
   * Return: void
   */
 void swap_int(int *a, int *b)
-{	int aux;
+{	
+	int x;
 	aux = *a;
 	*a = *b;
-	*b = aux;
+	*b = x;
 }
