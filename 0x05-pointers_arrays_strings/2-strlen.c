@@ -12,6 +12,6 @@ int _strlen(char *s);
 	for (n = 0; n != '\0'; n++)
 	{
 		n++;
-		return (n);
 	}
+	return (n);
 }
