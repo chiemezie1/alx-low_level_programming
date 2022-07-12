@@ -1,4 +1,4 @@
-#include "holberton.h"
+#include "main.h"
 /**
   * rev_string - Reverses a string
   * @s: The string to be modified
