@@ -16,17 +16,12 @@ void rev_string(char *s)
 	{
 		c++;
 	}
-
-	for (k = 1; k < c; k++)
-	{
-		a++;
-	}
-
+	k = c - 1; 
 	for (i = 0; i < (c / 2); i++)
 	{
 		x = s[i];
-		s[i] = *a;
-		*a = x;
-		a--;
+		s[i] = s[k];
+		s[k] = x;
+		k--;
 	}
 }
