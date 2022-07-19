@@ -1,19 +1,21 @@
 #include "main.h"
 
 /**
- * _memse -> fills a memory with a constant
- *
- *@s: memory to be replaced or filed
- *@b: constant which is to be used
- *@n: the integer bytes
- *
- *Return: the filled memory
- */
-char *_memset(char *s, char b, unsigned int n);
-{	unsigned int i;
-	for (i = 0; i < n; i++)
+  * _memset - Fill memory with a constant byte
+  * @s: memory area to fill
+  * @b: constant byte to fill
+  * @n: bytes of memory area to fill
+  *
+  * Return: the memory area filled
+  */
+char *_memset(char *s, char b, unsigned int n)
+{
+	unsigned int a;
+
+	for (a = 0; a < n; a++)
 	{
-		s[i] = b;
+		s[a] = b;
 	}
+
 	return (s);
 }
