@@ -1,9 +1,8 @@
-#include "main.h"
+#include "holberton.h"
 #include <stdio.h>
-#include <stdlib.h>
 
 /**
-  * main - Prints the multiplication of two args numbers
+  * main - Prints the number of args
   * @argc: argument count
   * @argv: argument vector
   *
@@ -11,22 +10,7 @@
   */
 int main(int argc, char *argv[])
 {
-	int x1 = 0, x2 = 0;
-
-	if (argc != 1)
-	{
-		printf("Error\n");
-	}
-	else if (argc < 0)
-	{
-		printf(0);
-	}
-	else
-	{
-		x1 = atoi(argv[1]);
-		x2 = atoi(argv[2]);
-		printf("%d\n", x1 * x2);
-	}
-
+	(void) argv;
+	printf("%d\n", argc - 1);
 	return (0);
 }
