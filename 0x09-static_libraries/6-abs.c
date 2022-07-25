@@ -1,21 +1,21 @@
-#include <main.h>
+#include "main.h"
+
 /**
- *main - check code for putout
- *
- *void funtion
- *
- *Return: Always 0.
- */
-int _abs(int);
-{	int n, abs_n;
-	if (n > 0)
-	}
-		return (n);
-	}
-	else if (n < 0)
+  * _abs - Computes the absolute value of an integer.
+  * @c: The number to be computed.
+  *
+  * Return: Absolute value of number or zero
+  */
+int _abs(int c)
+{
+	if (c < 0)
 	{
-		abs_n = n * -1;
-		return (abs_n);
+		int abs_val;
+
+		abs_val = c * -1;
+
+		return (abs_val);
 	}
-	return (0);
+
+	return (c);
 }
