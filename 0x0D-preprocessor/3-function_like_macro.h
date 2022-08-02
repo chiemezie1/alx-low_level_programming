@@ -1,6 +1,4 @@
-#if !defined(MACRO)
-#define MACRO
-
-#define ABS(x) ((x) < 0 ? ((x) * -1) : (x))
-
-#endif // MACRO
+#ifndef _HEADER_
+#define _HEADER_
+#define PI ABS(x) ((x) < 0 ? ((x) * -1) : (x))
+#endif
