@@ -9,12 +9,15 @@
  * return: number of nodes
  * 
  */
-size_t print_dlistint(const dlistint_t *h)
+int main(void)
 {
-    size_t count = 0;
-    for (; h != NULL; h = h->next)
+    size_t print_dlistint(const dlistint_t *h)
     {
-        printf("%d\n", h->n);
-        
+        size_t count = 0;
+        for (; h != NULL; h = h->next)
+        {
+            printf("%d\n", h->n);
+            count++;
+        }
     }
 }
