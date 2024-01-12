@@ -3,22 +3,20 @@
 #include <stdlib.h>
 
 /**
- * size_t print_dlistint - prints all the elements of a dlistint_t list
- * listint_t *head: pointer to the head of the list
- * @next: points to the next node
+ * print_dlistint - Prints all the elements of a dlistint_t list
+ * @h: A pointer to the head of the list
  *
- * return: number of nodes
- * 
+ * Return: The number of nodes
  */
-int main(void)
+size_t print_dlistint(const dlistint_t *h)
 {
-    size_t print_dlistint(const dlistint_t *h)
+    size_t count = 0;
+
+    while (h != NULL)
     {
-        size_t count = 0;
-        for (; h != NULL; h = h->next)
-        {
-            printf("%d\n", h->n);
-            count++;
-        }
+        printf("%d\n", h->n);
+        h = h->next;
+        count++;
     }
+    return (count);
 }
