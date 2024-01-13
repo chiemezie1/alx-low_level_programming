@@ -1,30 +1,27 @@
-#include <stab.h>
-#include <stdlib.h>
-#include "lists.h"
-#include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
-/**
- * keygen - Generates a random valid key
- * @key: The key to be generated
- * @size: The size of the key
- *
- * Return: 1 on success, 0 on failure
- */
-int keygen(char *key, int size)
-{
+void keygen(char *username) {
+    char key[7];
     int i;
-    int j;
-    int k;
-    int l;
-    int m;
-    int n;
-    int o;
-    int p;
 
-    for (i = 0; i < size; i++)
-    {
-        key[i] = 'a' + rand() % 26;
+    /* ... (existing code) */
+
+    // Use 'i' or another necessary variable in the loop
+    for (i = 0; i < 6; i++) {
+        key[i] = 'A' + rand() % 26;
     }
-    return (1);
+
+    key[6] = '\0';
+    printf("%s\n", key);
+}
+
+int main(int argc, char **argv) {
+    if (argc == 2) {
+        keygen(argv[1]);
+        return 0;
+    } else {
+        fprintf(stderr, "Usage: %s <username>\n", argv[0]);
+        return 1;
+    }
 }
