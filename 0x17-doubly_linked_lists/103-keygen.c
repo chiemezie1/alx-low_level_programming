@@ -14,3 +14,17 @@
 int keygen(char *key, int size)
 {
     int i;
+    int j;
+    int k;
+    int l;
+    int m;
+    int n;
+    int o;
+    int p;
+
+    for (i = 0; i < size; i++)
+    {
+        key[i] = 'a' + rand() % 26;
+    }
+    return (1);
+}
