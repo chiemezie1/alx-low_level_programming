@@ -1,27 +1,57 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
+#include <string.h>
 
-void keygen(char *username) {
-    char key[7];
-    int i;
+/**
+ * main - Generates random valid passwords
+ *
+ * Return: Always 0
+ */
+int main(void)
+{
+    char password[84];
+    int index = 0, sum = 0, diff_half1, diff_half2;
+    srand(time(0));
 
-    /* ... (existing code) */
-
-    // Use 'i' or another necessary variable in the loop
-    for (i = 0; i < 6; i++) {
-        key[i] = 'A' + rand() % 26;
+    while (sum < 2772)
+    {
+        password[index] = 33 + rand() % 94;
+        sum += password[index];
+        if (sum >= 2772)
+            break;
+        password[index] = ',';
+        index++;
     }
+    password[index] = '\0';
 
-    key[6] = '\0';
-    printf("%s\n", key);
-}
-
-int main(int argc, char **argv) {
-    if (argc == 2) {
-        keygen(argv[1]);
-        return 0;
-    } else {
-        fprintf(stderr, "Usage: %s <username>\n", argv[0]);
-        return 1;
+    if (sum != 2772)
+    {
+        printf("Error\n");
+        return (1);
     }
+    diff_half1 = (sum - 2772) / 2;
+    diff_half2 = (sum - 2772) / 2;
+    if ((sum - 2772) % 2 != 0)
+        diff_half1++;
+
+    for (index = 0; password[index]; index++)
+    {
+        if (password[index] >= 'a' && password[index] <= 'z')
+        {
+            if (password[index] - 'a' < diff_half1)
+                password[index] = 'a' + (password[index] - 'a' + diff_half1);
+            else
+                password[index] = 'a' + (password[index] - 'a' - diff_half1);
+        }
+        else if (password[index] >= 'A' && password[index] <= 'Z')
+        {
+            if (password[index] - 'A' < diff_half2)
+                password[index] = 'A' + (password[index] - 'A' + diff_half2);
+            else
+                password[index] = 'A' + (password[index] - 'A' - diff_half2);
+        }
+    }
+    printf("%s", password);
+    return (0);
 }
