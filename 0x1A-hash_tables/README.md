@@ -1,1090 +1,412 @@
+# Hash tables
 
-# Choosing a Hash Function
+# Learning Objectives
 
-The first step is to choose a reasonably good hash function that has a low chance of collision. However, for the purposes of this tutorial, a poor hash function will be applied to better illustrate hash collisions. This limited example will also only utilize strings (or character arrays in C).
+* What is a hash function
+* What makes a good hash function
+* What is a hash table, how do they work and how to use them
+* What is a collision and what are the main ways of dealing with collisions in the context of a hash table
+* What are the advantages and drawbacks of using hash tables
+* What are the most common use cases of hash tables
 
+# Tasks
+
+## >>> ht = {}
+
+Write a function that creates a hash table.
+
+* Prototype: `hash_table_t *hash_table_create(unsigned long int size);`
+    * where `size` is the size of the array
+* Returns a pointer to the newly created hash table
+* If something went wrong, your function should return `NULL`
+
+**Solution:** [0-hash_table_create.c](https://github.com/monoprosito/holbertonschool-low_level_programming/blob/master/0x1A-hash_tables/0-hash_table_create.c)
 
 ```
-#define CAPACITY 50000 // Size of the HashTable.unsigned long hash_function(char* str)
+$ amonkeyprogrammer@ubuntu:~/0x1A. Hash tables$ cat 0-main.c 
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include "hash_tables.h"
+
+/**
+ * main - check the code for Holberton School students.
+ *
+ * Return: Always EXIT_SUCCESS.
+ */
+int main(void)
 {
-    unsigned long i = 0;
+    hash_table_t *ht;
 
-    for (int j = 0; str[j]; j++)
-        i += str[j];
-
-    return i % CAPACITY;
+    ht = hash_table_create(1024);
+    printf("%p\n", (void *)ht);
+    return (EXIT_SUCCESS);
 }
-
+$ amonkeyprogrammer@ubuntu:~/0x1A. Hash tables$ gcc -Wall -pedantic -Werror -Wextra 0-main.c 0-hash_table_create.c -o a
+$ amonkeyprogrammer@ubuntu:~/0x1A. Hash tables$ ./a 
+0x238a010
+$ amonkeyprogrammer@ubuntu:~/0x1A. Hash tables$ valgrind ./a
+==7602== Memcheck, a memory error detector
+==7602== Copyright (C) 2002-2013, and GNU GPL'd, by Julian Seward et al.
+==7602== Using Valgrind-3.10.1 and LibVEX; rerun with -h for copyright info
+==7602== Command: ./a
+==7602== 
+0x51fc040
+==7602== 
+==7602== HEAP SUMMARY:
+==7602==     in use at exit: 8,208 bytes in 2 blocks
+==7602==   total heap usage: 2 allocs, 0 frees, 8,208 bytes allocated
+==7602== 
+==7602== LEAK SUMMARY:
+==7602==    definitely lost: 16 bytes in 1 blocks
+==7602==    indirectly lost: 8,192 bytes in 1 blocks
+==7602==      possibly lost: 0 bytes in 0 blocks
+==7602==    still reachable: 0 bytes in 0 blocks
+==7602==         suppressed: 0 bytes in 0 blocks
+==7602== Rerun with --leak-check=full to see details of leaked memory
+==7602== 
+==7602== For counts of detected and suppressed errors, rerun with: -v
+==7602== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+$ amonkeyprogrammer@ubuntu:~/0x1A. Hash tables$
 ```
 
+## djb2
 
-Run this code and test different strings for potential collisions. For example, the strings `Hel` and `Cau` will collide since they have the same ASCII value.
+Write a hash function implementing the djb2 algorithm.
 
-This code must return a number within the bounds of the capacity of the hash table. Otherwise, it may access an unbound memory location, leading to an error.
+* Prototype: `unsigned long int hash_djb2(const unsigned char *str);`
 
-## [Defining the Hash Table Data Structures](https://www.digitalocean.com/community/tutorials/hash-table-in-c-plus-plus#defining-the-hash-table-data-structures)
-
-A hash table is an array of items, which are `{ key: value }` pairs.
-
-First, define the item structure:
-
+**Solution:** [1-djb2.c](https://github.com/monoprosito/holbertonschool-low_level_programming/blob/master/0x1A-hash_tables/1-djb2.c)
 
 ```
-// Defines the HashTable item.
-
-typedef struct Ht_item
+$ amonkeyprogrammer@ubuntu:~/0x1A. Hash tables$ cat 1-djb2.c 
+unsigned long int hash_djb2(const unsigned char *str)
 {
-    char* key;
-    char* value;
-} Ht_item;
+    unsigned long int hash;
+    int c;
 
-```
-
-
-Now, the hash table has an array of pointers that point to `Ht_item`, so it is a *double-pointer*.
-
-
-```
-// Defines the HashTable.
-typedef struct HashTable
-{
-    // Contains an array of pointers to items.
-    Ht_item** items;
-    int size;
-    int count;
-} HashTable;
-
-```
-
-
-Your hash table will need to return the number of elements in the hash table using `count` and size of the hash table using `size`.
-
-## [Creating the Hash Table and Hash Table Items](https://www.digitalocean.com/community/tutorials/hash-table-in-c-plus-plus#creating-the-hash-table-and-hash-table-items)
-
-Next, create functions for allocating memory and creating items.
-
-Create items by allocating memory for a key and value, and return a pointer to the item:
-
-
-```
-Ht_item* create_item(char* key, char* value)
-{
-    // Creates a pointer to a new HashTable item.
-    Ht_item* item = (Ht_item*) malloc(sizeof(Ht_item));
-    item->key = (char*) malloc(strlen(key) + 1);
-    item->value = (char*) malloc(strlen(value) + 1);
-    strcpy(item->key, key);
-    strcpy(item->value, value);
-    return item;
-}
-
-```
-
-
-Create the table by allocating memory and setting `size`, `count`, and `items`:
-
-
-```
-HashTable* create_table(int size)
-{
-    // Creates a new HashTable.
-    HashTable* table = (HashTable*) malloc(sizeof(HashTable));
-    table->size = size;
-    table->count = 0;
-    table->items = (Ht_item**) calloc(table->size, sizeof(Ht_item*));
-
-    for (int i = 0; i < table->size; i++)
-        table->items[i] = NULL;
-
-    return table;
-}
-
-```
-
-
-The preceding example allocates memory for the wrapper structure `HashTable` and sets all the items to `NULL`.
-
-Freeing up memory is a C/C++ best practice. Free up memory that you’ve allocated on the heap with `malloc()` and `calloc()`.
-
-Write functions that free up a table item and the whole table.
-
-
-```
-void free_item(Ht_item* item)
-{
-    // Frees an item.
-    free(item->key);
-    free(item->value);
-    free(item);
-}
-
-void free_table(HashTable* table)
-{
-    // Frees the table.
-    for (int i = 0; i < table->size; i++)
+    hash = 5381;
+    while ((c = *str++))
     {
-        Ht_item* item = table->items[i];
-
-        if (item != NULL)
-            free_item(item);
+        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
     }
-
-    free(table->items);
-    free(table);
+    return (hash);
 }
+$ amonkeyprogrammer@ubuntu:~/0x1A. Hash tables$ 
+$ amonkeyprogrammer@ubuntu:~/0x1A. Hash tables$ cat 1-main.c 
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include "hash_tables.h"
 
-```
-
-
-Add a `print_table()` to display the `index`, `key`, and `value` for each item:
-
-
-```
-void print_table(HashTable* table)
+/**
+ * main - check the code for Holberton School students.
+ *
+ * Return: Always EXIT_SUCCESS.
+ */
+int main(void)
 {
-    printf("\nHash Table\n-------------------\n");
+    char *s;
 
-    for (int i = 0; i < table->size; i++)
-    {
-        if (table->items[i])
-        {
-            printf("Index:%d, Key:%s, Value:%s\n", i, table->items[i] -> key, table->items[i]->value);
-        }
-    }
-
-    printf("-------------------\n\n");
+    s = "cisfun";
+    printf("%lu\n", hash_djb2((unsigned char *)s));
+    s = "Don't forget to tweet today";
+    printf("%lu\n", hash_djb2((unsigned char *)s));
+    s = "98";
+    printf("%lu\n", hash_djb2((unsigned char *)s));
+    return (EXIT_SUCCESS);
 }
-
+$ amonkeyprogrammer@ubuntu:~/0x1A. Hash tables$ gcc -Wall -pedantic -Werror -Wextra 1-main.c 1-djb2.c -o b
+$ amonkeyprogrammer@ubuntu:~/0x1A. Hash tables$ ./b 
+6953392314605
+3749890792216096085
+5861846
+$ amonkeyprogrammer@ubuntu:~/0x1A. Hash tables$
 ```
 
+## key -> index
 
-This concludes the basic functionality of your custom hash table. You will now write insert, search, and delete functions.
+Write a function that gives you the index of a key.
 
-## [Inserting into the Hash Table](https://www.digitalocean.com/community/tutorials/hash-table-in-c-plus-plus#inserting-into-the-hash-table)
+* Prototype: `unsigned long int key_index(const unsigned char *key, unsigned long int size);`
+    * where `key` is the key
+    * and `size` is the size of the array of the hash table
+* This function should use the `hash_djb2` function that you wrote earlier
+* Returns the index at which the key/value pair should be stored in the array of the hash table
 
-Create a function, `ht_insert()`, that performs insertions.
-
-The function takes a `HashTable` pointer, a `key`, and a `value` as parameters:
+**Solution:** [2-key_index.c](https://github.com/monoprosito/holbertonschool-low_level_programming/blob/master/0x1A-hash_tables/2-key_index.c)
 
 ```
-void ht_insert(HashTable* table, char* key, char* value)
+$ amonkeyprogrammer@ubuntu:~/0x1A. Hash tables$ cat 2-main.c 
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include "hash_tables.h"
+
+/**
+ * main - check the code for Holberton School students.
+ *
+ * Return: Always EXIT_SUCCESS.
+ */
+int main(void)
 {
-    ...
+    char *s;
+    unsigned long int hash_table_array_size;
+
+    hash_table_array_size = 1024;
+    s = "cisfun";
+    printf("%lu\n", hash_djb2((unsigned char *)s));
+    printf("%lu\n", key_index((unsigned char *)s, hash_table_array_size));
+    s = "Don't forget to tweet today";
+    printf("%lu\n", hash_djb2((unsigned char *)s));
+    printf("%lu\n", key_index((unsigned char *)s, hash_table_array_size));
+    s = "98";
+    printf("%lu\n", hash_djb2((unsigned char *)s));
+    printf("%lu\n", key_index((unsigned char *)s, hash_table_array_size));  
+    return (EXIT_SUCCESS);
 }
-
+$ amonkeyprogrammer@ubuntu:~/0x1A. Hash tables$ gcc -Wall -pedantic -Werror -Wextra 2-main.c 1-djb2.c 2-key_index.c -o c
+$ amonkeyprogrammer@ubuntu:~/0x1A. Hash tables$ ./c 
+6953392314605
+237
+3749890792216096085
+341
+5861846
+470
+$ amonkeyprogrammer@ubuntu:~/0x1A. Hash tables$
 ```
 
+## >>> ht['betty'] = 'holberton'
 
-Now, there are certain steps involved in the `ht_insert()` function.
+Write a function that adds an element to the hash table.
 
-- Create the item based on the `{ key: value }` pair.
-- Compute the index based on the hash function.
-- Check if the index is already occupied or not, by comparing the `key`.
-    - If it is not occupied, you can directly insert it into `index`.
-    - Otherwise, it is a collision, and you will need to handle it.
-
-This tutorial will address handling collisions after the initial model has been created.
-
-First, create the item:
+* Prototype: `int hash_table_set(hash_table_t *ht, const char *key, const char *value);`
+    * Where `ht` is the hash table you want to add or update the key/value to
+    * `key` is the key. `key` can not be an empty string
+    * and `value` is the value associated with the key. `value` must be duplicated. `value` can be an empty string
+* Returns: `1` if it succeeded, `0` otherwise
+* In case of collision, add the new node at the beginning of the list
 
 ```
-create_item(key, value)
+$ amonkeyprogrammer@ubuntu:~/0x1A. Hash tables$ cat 3-main.c 
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include "hash_tables.h"
 
-```
-
-
-Then, compute the index:
-
-```
-int index = hash_function(key);
-
-```
-
-
-When inserting the key for the first time, the item must be a `NULL`:
-
-
-```
-// Creates the item.
-Ht_item* item = create_item(key, value);
-
-// Computes the index.
-int index = hash_function(key);
-
-Ht_item* current_item = table->items[index];
-
-if (current_item == NULL)
+/**
+ * main - check the code for Holberton School students.
+ *
+ * Return: Always EXIT_SUCCESS.
+ */
+int main(void)
 {
-    // Key does not exist.
-    if (table->count == table->size)
-    {
-        // HashTable is full.
-        printf("Insert Error: Hash Table is full\n");
-        free_item(item);
-        return;
-    }
+    hash_table_t *ht;
 
-    // Insert directly.
-    table->items[index] = item;
-    table->count++;
+    ht = hash_table_create(1024);
+    hash_table_set(ht, "betty", "holberton");
+    return (EXIT_SUCCESS);
 }
-
+$ amonkeyprogrammer@ubuntu:~/0x1A. Hash tables$ gcc -Wall -pedantic -Werror -Wextra 3-main.c 0-hash_table_create.c 1-djb2.c 2-key_index.c 3-hash_table_set.c -o d
+$ amonkeyprogrammer@ubuntu:~/0x1A. Hash tables$
 ```
 
+Here are some strings that collide using the djb2 algorithm:
 
-Consider the scenario where the `{ key: value }` pair already exists because the same item has been inserted into the hash table. To address this, the code must update the item value to the new one:
+* **hetairas** collides with **mentioner**
+* **heliotropes** collides with **neurospora**
+* **depravement** collides with **serafins**
+* **stylist** collides with **subgenera**
+* **joyful** collides with **synaphea**
+* **redescribed** collides with **urites**
+* **dram** collides with **vivency**
 
+**Solution:** [3-hash_table_set.c](https://github.com/monoprosito/holbertonschool-low_level_programming/blob/master/0x1A-hash_tables/3-hash_table_set.c)
+
+## >>> ht['betty']
+
+Write a function that retrieves a value associated with a key.
+
+* Prototype: `char *hash_table_get(const hash_table_t *ht, const char *key);`
+    * where `ht` is the hash table you want to look into
+    * and `key` is the key you are looking for
+* Returns the value associated with the element, or `NULL` if `key` couldn’t be found
+
+**Solution:** [4-hash_table_get.c](https://github.com/monoprosito/holbertonschool-low_level_programming/blob/master/0x1A-hash_tables/4-hash_table_get.c)
 
 ```
-if (current_item == NULL)
+$ amonkeyprogrammer@ubuntu:~/0x1A. Hash tables$ cat 4-main.c 
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include "hash_tables.h"
+
+/**
+ * main - check the code for Holberton School students.
+ *
+ * Return: Always EXIT_SUCCESS.
+ */
+int main(void)
 {
-    ...
+    hash_table_t *ht;
+    char *value;
+
+    ht = hash_table_create(1024);
+    hash_table_set(ht, "c", "fun");
+    hash_table_set(ht, "python", "awesome");
+    hash_table_set(ht, "Jennie", "and Jay love asm");
+    hash_table_set(ht, "N", "queens");
+    hash_table_set(ht, "Asterix", "Obelix");
+    hash_table_set(ht, "Betty", "Holberton");
+    hash_table_set(ht, "98", "Battery Street");
+    hash_table_set(ht, "c", "isfun");
+
+    value = hash_table_get(ht, "python");
+    printf("%s:%s\n", "python", value);
+    value = hash_table_get(ht, "Jennie");
+    printf("%s:%s\n", "Jennie", value);
+    value = hash_table_get(ht, "N");
+    printf("%s:%s\n", "N", value);
+    value = hash_table_get(ht, "Asterix");
+    printf("%s:%s\n", "Asterix", value);
+    value = hash_table_get(ht, "Betty");
+    printf("%s:%s\n", "Betty", value);
+    value = hash_table_get(ht, "98");
+    printf("%s:%s\n", "98", value);
+    value = hash_table_get(ht, "c");
+    printf("%s:%s\n", "c", value);
+    value = hash_table_get(ht, "javascript");
+    printf("%s:%s\n", "javascript", value);
+    return (EXIT_SUCCESS);
 }
-else {// Scenario 1: Update the value.
-if (strcmp(current_item->key, key) == 0){strcpy(table->items[index] -> value, value);return;}}
+$ amonkeyprogrammer@ubuntu:~/0x1A. Hash tables$ gcc -Wall -pedantic -Werror -Wextra 4-main.c 0-hash_table_create.c 1-djb2.c 2-key_index.c 3-hash_table_set.c 4-hash_table_get.c -o e
+$ amonkeyprogrammer@ubuntu:~/0x1A. Hash tables$ ./e 
+python:awesome
+Jennie:and Jay love asm
+N:queens
+Asterix:Obelix
+Betty:Holberton
+98:Battery Street
+c:isfun
+javascript:(null)
+$ amonkeyprogrammer@ubuntu:~/0x1A. Hash tables$
 ```
 
+## >>> print(ht)
 
-Consider the scenario where a collision has to be handled. To address this, a placeholder has been added:
+Write a function that prints a hash table.
 
+* Prototype: `void hash_table_print(const hash_table_t *ht);`
+    * where `ht` is the hash table
+* You should print the key/value in the order that they appear in the array of hash table
+    * Order: array, list
+* Format: see example
+* If `ht` is NULL, don’t print anything
+
+**Solution:** [5-hash_table_print.c](https://github.com/monoprosito/holbertonschool-low_level_programming/blob/master/0x1A-hash_tables/5-hash_table_print.c)
 
 ```
-void handle_collision(HashTable* table, Ht_item* item){}void ht_insert(HashTable* table, char* key, char* value)
+$ amonkeyprogrammer@ubuntu:~/0x1A. Hash tables$ cat 5-main.c 
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include "hash_tables.h"
+
+/**
+ * main - check the code for Holberton School students.
+ *
+ * Return: Always EXIT_SUCCESS.
+ */
+int main(void)
 {
-    ...
+    hash_table_t *ht;
 
-    if (current_item == NULL)
-    {
-        ...
-    }
-    else {
-        // Scenario 1: Update the value.
-        if (strcmp(current_item->key, key) == 0)
-        {
-            ...
-        }
-else {// Scenario 2: Handle the collision.
-handle_collision(table, item);return;}}
+    ht = hash_table_create(1024);
+    hash_table_print(ht);
+    hash_table_set(ht, "c", "fun");
+    hash_table_set(ht, "python", "awesome");
+    hash_table_set(ht, "Jennie", "and Jay love asm");
+    hash_table_set(ht, "N", "queens");
+    hash_table_set(ht, "Asterix", "Obelix");
+    hash_table_set(ht, "Betty", "Holberton");
+    hash_table_set(ht, "98", "Battery Street");
+    hash_table_print(ht);
+    return (EXIT_SUCCESS);
 }
-
+$ amonkeyprogrammer@ubuntu:~/0x1A. Hash tables$ gcc -Wall -pedantic -Werror -Wextra 5-main.c 0-hash_table_create.c 1-djb2.c 2-key_index.c 3-hash_table_set.c 4-hash_table_get.c 5-hash_table_print.c -o f
+$ amonkeyprogrammer@ubuntu:~/0x1A. Hash tables$ ./f 
+{}
+{'Betty': 'Holberton', 'python': 'awesome', 'Jennie': 'and Jay love asm', '98': 'Battery Street', 'N': 'queens', 'c': 'fun', 'Asterix': 'Obelix'}
+$ amonkeyprogrammer@ubuntu:~/0x1A. Hash tables$
 ```
 
+## >>> del ht
 
-Now, your `ht_insert()` function is complete.
+Write a function that deletes a hash table.
 
-## [Searching for Items in the Hash Table](https://www.digitalocean.com/community/tutorials/hash-table-in-c-plus-plus#searching-for-items-in-the-hash-table)
+* Prototype: `void hash_table_delete(hash_table_t *ht);`
+    * where `ht` is the hash table
 
-Create a function, `ht_search()`, that checks if the key exists, and returns the corresponding value if it does.
-
-The function takes a `HashTable` pointer and a `key` as parameters:
+**Solution:** [6-hash_table_delete.c](https://github.com/monoprosito/holbertonschool-low_level_programming/blob/master/0x1A-hash_tables/6-hash_table_delete.c)
 
 ```
-char* ht_search(HashTable* table, char* key)
+$ amonkeyprogrammer@ubuntu:~/0x1A. Hash tables$ cat 6-main.c 
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include "hash_tables.h"
+
+/**
+ * main - check the code for Holberton School students.
+ *
+ * Return: Always EXIT_SUCCESS.
+ */
+int main(void)
 {
-    ...
-}
-
-```
-
-
-Search for an item with the `key` in the `HashTable`. If the item cannot be found in the `HashTable`, `NULL` is returned.
-
-
-```
-char* ht_search(HashTable* table, char* key)
-{
-    // Searches for the key in the HashTable.
-    // Returns NULL if it doesn't exist.
-    int index = hash_function(key);
-    Ht_item* item = table->items[index];
-
-    // Provide only non-NULL values.
-    if (item != NULL)
-    {
-        if (strcmp(item->key, key) == 0)
-            return item->value;
-    }
-
-    return NULL;
-}
-
-```
-
-
-Add a `print_search()` to display the item that matches the `key`:
-
-
-```
-void print_search(HashTable* table, char* key)
-{
-    char* val;
-
-    if ((val = ht_search(table, key)) == NULL)
-    {
-        printf("Key:%s does not exist\n", key);
-        return;
-    }
-    else {
-        printf("Key:%s, Value:%s\n", key, val);
-    }
-}
-
-```
-
-
-Now, your `ht_search()` function is complete.
-
-## [Handling Collisions](https://www.digitalocean.com/community/tutorials/hash-table-in-c-plus-plus#handling-collisions)
-
-There are different ways to resolve a collision. This tutorial will rely upon a method called [Separate Chaining](https://en.wikipedia.org/wiki/Hash_table#Collision_resolution), which aims to create independent chains for all items that have the same hash index. The implementation in this tutorial will create these chains using linked lists.
-
-Whenever there is a collision, additional items that collide on the same index are added to an *overflow bucket list*. Thus, you will not have to delete any existing records on the hash table.
-
-Due to linked lists having `O(n)` time complexity for insertion, searching, and deletion, in case of a collision, you will have a worst-case access time of `O(n)` as well. The advantage of this method is that it is a good choice if your hash table has a low capacity.
-
-Implement the overflow bucket list:
-
-
-```
-// Defines the LinkedList.
-typedef struct LinkedList {
-    Ht_item* item;
-    struct LinkedList* next;
-} LinkedList;;
-
-LinkedList* allocate_list()
-{
-    // Allocates memory for a LinkedList pointer.
-    LinkedList* list = (LinkedList*) malloc(sizeof(LinkedList));
-    return list;
-}
-
-LinkedList* linkedlist_insert(LinkedList* list, Ht_item* item)
-{
-    // Inserts the item onto the LinkedList.
-    if (!list)
-    {
-        LinkedList* head = allocate_list();
-        head->item = item;
-        head->next = NULL;
-        list = head;
-        return list;
-    }
-    else if (list->next == NULL)
-    {
-        LinkedList* node = allocate_list();
-        node->item = item;
-        node->next = NULL;
-        list->next = node;
-        return list;
-    }
-
-    LinkedList* temp = list;
-
-    while (temp->next->next)
-    {
-        temp = temp->next;
-    }
-
-    LinkedList* node = allocate_list();
-    node->item = item;
-    node->next = NULL;
-    temp->next = node;
-    return list;
-}
-
-Ht_item* linkedlist_remove(LinkedList* list)
-{
-    // Removes the head from the LinkedList.
-    // Returns the item of the popped element.
-    if (!list)
-        return NULL;
-
-    if (!list->next)
-        return NULL;
-
-    LinkedList* node = list->next;
-    LinkedList* temp = list;
-    temp->next = NULL;
-    list = node;
-    Ht_item* it = NULL;
-    memcpy(temp->item, it, sizeof(Ht_item));
-    free(temp->item->key);
-    free(temp->item->value);
-    free(temp->item);
-    free(temp);
-    return it;
-}
-
-void free_linkedlist(LinkedList* list)
-{
-    LinkedList* temp = list;
-
-    while (list)
-    {
-        temp = list;
-        list = list->next;
-        free(temp->item->key);
-        free(temp->item->value);
-        free(temp->item);
-        free(temp);
-    }
-}
-
-```
-
-
-Now, add these overflow bucket lists to your `HashTable`. Every item will have a chain, so the whole table is an array of `LinkedList` pointers.
-
-
-```
-typedef struct HashTable HashTable;
-
-// Defines the HashTable.
-struct HashTable
-{
-    // Contains an array of pointers to items.
-    Ht_item** items;
-LinkedList** overflow_buckets;int size;
-    int count;
-};
-
-```
-
-
-Now that `overflow_buckets` have been defined, add functions to create and delete them. You will also need to account for them in the `create_table()` and `free_table()` functions.
-
-
-```
-LinkedList** create_overflow_buckets(HashTable* table){// Create the overflow buckets; an array of LinkedLists.
-LinkedList** buckets = (LinkedList**) calloc(table->size, sizeof(LinkedList*));for (int i = 0; i < table->size; i++)buckets[i] = NULL;return buckets;}void free_overflow_buckets(HashTable* table){// Free all the overflow bucket lists.
-LinkedList** buckets = table->overflow_buckets;for (int i = 0; i < table->size; i++)free_linkedlist(buckets[i]);free(buckets);}
-
-HashTable* create_table(int size)
-{
-    // Creates a new HashTable.
-    HashTable* table = (HashTable*) malloc(sizeof(HashTable));
-    table->size = size;
-    table->count = 0;
-    table->items = (Ht_item**) calloc(table->size, sizeof(Ht_item*));
-
-    for (int i = 0; i < table->size; i++)
-        table->items[i] = NULL;
-
-table->overflow_buckets = create_overflow_buckets(table);return table;
-}
-
-void free_table(HashTable* table)
-{
-    // Frees the table.
-    for (int i = 0; i < table->size; i++)
-    {
-        Ht_item* item = table->items[i];
-
-        if (item != NULL)
-            free_item(item);
-    }
-
-    // Free the overflow bucket lists and its items.
-free_overflow_buckets(table);free(table->items);
-    free(table);
-}
-
-```
-
-
-If the overflow bucket list for the item does not exist, create a list and add the item to it.
-
-Update `handle_collision()` for insertions:
-
-
-```
-void handle_collision(HashTable* table,unsigned long index, Ht_item* item)
-{
-LinkedList* head = table->overflow_buckets[index];if (head == NULL){// Creates the list.
-head = allocate_list();head->item = item;table->overflow_buckets[index] = head;return;}else {// Insert to the list.
-table->overflow_buckets[index] = linkedlist_insert(head, item);return;}}
-
-```
-
-
-And the call:
-
-
-```
-void ht_insert(HashTable* table, char* key, char* value)
-{
-    ...
-
-    if (current_item == NULL)
-    {
-        ...
-    }
-    else {
-        // Scenario 1: Update the value.
-        if (strcmp(current_item->key, key) == 0)
-        {
-            ...
-        }
-        else {
-            // Scenario 2: Handle the collision.
-            handle_collision(table,index, item);
-            return;
-        }
-    }
-}
-
-```
-
-
-Now, update the search method to use overflow buckets:
-
-
-```
-char* ht_search(HashTable* table, char* key)
-{
-    // Searches for the key in the HashTable.
-    // Returns NULL if it doesn't exist.
-    int index = hash_function(key);
-    Ht_item* item = table->items[index];
-LinkedList* head = table->overflow_buckets[index];// Provide only non-NULL values.
-    if (item != NULL)
-    {
-        if (strcmp(item->key, key) == 0)
-            return item->value;
-
-if (head == NULL)return NULL;item = head->item;head = head->next;}
-
-    return NULL;
-}
-
-```
-
-
-Finally, collisions are now handled in `insert()` and `search()`!
-
-## [Deleting from the Hash Table](https://www.digitalocean.com/community/tutorials/hash-table-in-c-plus-plus#deleting-from-the-hash-table)
-
-Let’s now finally look at the delete function:
-
-```
-void ht_delete(HashTable* table, char* key)
-{
-    ...
-}
-
-```
-
-
-Again, the method is similar to insertion.
-
-1. Compute the hash index and get the item.
-2. If it is `NULL`, don’t do anything.
-3. Otherwise, after comparing keys, if there is no collision chain for that index, remove the item from the table.
-4. If a collision chain exists, remove that element and shift the links accordingly.
-
-
-```
-void ht_delete(HashTable* table, char* key)
-{
-    // Deletes an item from the table.
-    int index = hash_function(key);
-    Ht_item* item = table->items[index];
-    LinkedList* head = table->overflow_buckets[index];
-
-    if (item == NULL)
-    {
-        // Does not exist.
-        return;
-    }
-    else {
-        if (head == NULL && strcmp(item->key, key) == 0)
-        {
-            // Collision chain does not exist.
-            // Remove the item.
-            // Set table index to NULL.
-            table->items[index] = NULL;
-            free_item(item);
-            table->count--;
-            return;
-        }
-        else if (head != NULL)
-        {
-            // Collision chain exists.
-            if (strcmp(item->key, key) == 0)
-            {
-                // Remove this item.
-                // Set the head of the list as the new item.
-                free_item(item);
-                LinkedList* node = head;
-                head = head->next;
-                node->next = NULL;
-                table->items[index] = create_item(node->item->key, node->item->value);
-                free_linkedlist(node);
-                table->overflow_buckets[index] = head;
-                return;
-            }
-
-            LinkedList* curr = head;
-            LinkedList* prev = NULL;
-
-            while (curr)
-            {
-                if (strcmp(curr->item->key, key) == 0)
-                {
-                    if (prev == NULL)
-                    {
-                        // First element of the chain.
-                        // Remove the chain.
-                        free_linkedlist(head);
-                        table->overflow_buckets[index] = NULL;
-                        return;
-                    }
-                    else
-                    {
-                        // This is somewhere in the chain.
-                        prev->next = curr->next;
-                        curr->next = NULL;
-                        free_linkedlist(curr);
-                        table->overflow_buckets[index] = head;
-                        return;
-                    }
-                }
-
-                curr = curr->next;
-                prev = curr;
-            }
-        }
-    }
-}
-
-```
-
-
-```
-#include <stdio.h>#include <stdlib.h>#include <string.h>#define CAPACITY 50000 // Size of the HashTable.unsigned long hash_function(char *str)
-{
-    unsigned long i = 0;
-
-    for (int j = 0; str[j]; j++)
-        i += str[j];
-
-    return i % CAPACITY;
-}
-
-// Defines the HashTable item.
-typedef struct Ht_item
-{
+    hash_table_t *ht;
     char *key;
     char *value;
-} Ht_item;
 
-// Defines the LinkedList.
-typedef struct LinkedList
-{
-    Ht_item *item;
-    LinkedList *next;
-} LinkedList;
-
-// Defines the HashTable.
-typedef struct HashTable
-{
-    // Contains an array of pointers to items.
-    Ht_item **items;
-    LinkedList **overflow_buckets;
-    int size;
-    int count;
-} HashTable;
-
-LinkedList *allocate_list()
-{
-    // Allocates memory for a LinkedList pointer.
-    LinkedList *list = (LinkedList *)malloc(sizeof(LinkedList));
-    return list;
+    ht = hash_table_create(1024);
+    hash_table_set(ht, "c", "fun");
+    hash_table_set(ht, "python", "awesome");
+    hash_table_set(ht, "Jennie", "and Jay love asm");
+    hash_table_set(ht, "N", "queens");
+    hash_table_set(ht, "Asterix", "Obelix");
+    hash_table_set(ht, "Betty", "Holberton");
+    hash_table_set(ht, "98", "Battery Streetz");
+    key = strdup("Tim");
+    value = strdup("Britton");
+    hash_table_set(ht, key, value);
+    key[0] = '\0';
+    value[0] = '\0';
+    free(key);
+    free(value);
+    hash_table_set(ht, "98", "Battery Street"); 
+    hash_table_set(ht, "hetairas", "Jennie");
+    hash_table_set(ht, "hetairas", "Jennie Z");
+    hash_table_set(ht, "mentioner", "Jennie");
+    hash_table_set(ht, "hetairas", "Jennie Z Chu");
+    hash_table_print(ht);
+    hash_table_delete(ht);
+    return (EXIT_SUCCESS);
 }
-
-LinkedList *linkedlist_insert(LinkedList *list, Ht_item *item)
-{
-    // Inserts the item onto the LinkedList.
-    if (!list)
-    {
-        LinkedList *head = allocate_list();
-        head->item = item;
-        head->next = NULL;
-        list = head;
-        return list;
-    }
-    else if (list->next == NULL)
-    {
-        LinkedList *node = allocate_list();
-        node->item = item;
-        node->next = NULL;
-        list->next = node;
-        return list;
-    }
-
-    LinkedList *temp = list;
-
-    while (temp->next->next)
-    {
-        temp = temp->next;
-    }
-
-    LinkedList *node = allocate_list();
-    node->item = item;
-    node->next = NULL;
-    temp->next = node;
-    return list;
-}
-
-Ht_item *linkedlist_remove(LinkedList *list)
-{
-    // Removes the head from the LinkedList.
-    // Returns the item of the popped element.
-    if (!list)
-        return NULL;
-
-    if (!list->next)
-        return NULL;
-
-    LinkedList *node = list->next;
-    LinkedList *temp = list;
-    temp->next = NULL;
-    list = node;
-    Ht_item *it = NULL;
-    memcpy(temp->item, it, sizeof(Ht_item));
-    free(temp->item->key);
-    free(temp->item->value);
-    free(temp->item);
-    free(temp);
-    return it;
-}
-
-void free_linkedlist(LinkedList *list)
-{
-    LinkedList *temp = list;
-
-    while (list)
-    {
-        temp = list;
-        list = list->next;
-        free(temp->item->key);
-        free(temp->item->value);
-        free(temp->item);
-        free(temp);
-    }
-}
-
-LinkedList **create_overflow_buckets(HashTable *table)
-{
-    // Create the overflow buckets; an array of LinkedLists.
-    LinkedList **buckets = (LinkedList **)calloc(table->size, sizeof(LinkedList *));
-
-    for (int i = 0; i < table->size; i++)
-        buckets[i] = NULL;
-
-    return buckets;
-}
-
-void free_overflow_buckets(HashTable *table)
-{
-    // Free all the overflow bucket lists.
-    LinkedList **buckets = table->overflow_buckets;
-
-    for (int i = 0; i < table->size; i++)
-        free_linkedlist(buckets[i]);
-
-    free(buckets);
-}
-
-Ht_item *create_item(char *key, char *value)
-{
-    // Creates a pointer to a new HashTable item.
-    Ht_item *item = (Ht_item *)malloc(sizeof(Ht_item));
-    item->key = (char *)malloc(strlen(key) + 1);
-    item->value = (char *)malloc(strlen(value) + 1);
-    strcpy(item->key, key);
-    strcpy(item->value, value);
-    return item;
-}
-
-HashTable *create_table(int size)
-{
-    // Creates a new HashTable.
-    HashTable *table = (HashTable *)malloc(sizeof(HashTable));
-    table->size = size;
-    table->count = 0;
-    table->items = (Ht_item **)calloc(table->size, sizeof(Ht_item *));
-
-    for (int i = 0; i < table->size; i++)
-        table->items[i] = NULL;
-
-    table->overflow_buckets = create_overflow_buckets(table);
-
-    return table;
-}
-
-void free_item(Ht_item *item)
-{
-    // Frees an item.
-    free(item->key);
-    free(item->value);
-    free(item);
-}
-
-void free_table(HashTable *table)
-{
-    // Frees the table.
-    for (int i = 0; i < table->size; i++)
-    {
-        Ht_item *item = table->items[i];
-
-        if (item != NULL)
-            free_item(item);
-    }
-
-    // Free the overflow bucket lists and its items.
-    free_overflow_buckets(table);
-    free(table->items);
-    free(table);
-}
-
-void handle_collision(HashTable *table, unsigned long index, Ht_item *item)
-{
-    LinkedList *head = table->overflow_buckets[index];
-
-    if (head == NULL)
-    {
-        // Creates the list.
-        head = allocate_list();
-        head->item = item;
-        table->overflow_buckets[index] = head;
-        return;
-    }
-    else
-    {
-        // Insert to the list.
-        table->overflow_buckets[index] = linkedlist_insert(head, item);
-        return;
-    }
-}
-
-void ht_insert(HashTable *table, char *key, char *value)
-{
-    // Creates the item.
-    Ht_item *item = create_item(key, value);
-
-    // Computes the index.
-    int index = hash_function(key);
-
-    Ht_item *current_item = table->items[index];
-
-    if (current_item == NULL)
-    {
-        // Key does not exist.
-        if (table->count == table->size)
-        {
-            // HashTable is full.
-            printf("Insert Error: Hash Table is full\n");
-            free_item(item);
-            return;
-        }
-
-        // Insert directly.
-        table->items[index] = item;
-        table->count++;
-    }
-    else
-    {
-        // Scenario 1: Update the value.
-        if (strcmp(current_item->key, key) == 0)
-        {
-            strcpy(table->items[index]->value, value);
-            return;
-        }
-        else
-        {
-            // Scenario 2: Handle the collision.
-            handle_collision(table, index, item);
-            return;
-        }
-    }
-}
-
-char *ht_search(HashTable *table, char *key)
-{
-    // Searches for the key in the HashTable.
-    // Returns NULL if it doesn't exist.
-    int index = hash_function(key);
-    Ht_item *item = table->items[index];
-    LinkedList *head = table->overflow_buckets[index];
-
-    // Provide only non-NULL values.
-    if (item != NULL)
-    {
-        if (strcmp(item->key, key) == 0)
-            return item->value;
-
-        if (head == NULL)
-            return NULL;
-
-        item = head->item;
-        head = head->next;
-    }
-
-    return NULL;
-}
-
-void ht_delete(HashTable *table, char *key)
-{
-    // Deletes an item from the table.
-    int index = hash_function(key);
-    Ht_item *item = table->items[index];
-    LinkedList *head = table->overflow_buckets[index];
-
-    if (item == NULL)
-    {
-        // Does not exist.
-        return;
-    }
-    else
-    {
-        if (head == NULL && strcmp(item->key, key) == 0)
-        {
-            // Collision chain does not exist.
-            // Remove the item.
-            // Set table index to NULL.
-            table->items[index] = NULL;
-            free_item(item);
-            table->count--;
-            return;
-        }
-        else if (head != NULL)
-        {
-            // Collision chain exists.
-            if (strcmp(item->key, key) == 0)
-            {
-                // Remove this item.
-                // Set the head of the list as the new item.
-                free_item(item);
-                LinkedList *node = head;
-                head = head->next;
-                node->next = NULL;
-                table->items[index] = create_item(node->item->key, node->item->value);
-                free_linkedlist(node);
-                table->overflow_buckets[index] = head;
-                return;
-            }
-
-            LinkedList *curr = head;
-            LinkedList *prev = NULL;
-
-            while (curr)
-            {
-                if (strcmp(curr->item->key, key) == 0)
-                {
-                    if (prev == NULL)
-                    {
-                        // First element of the chain.
-                        // Remove the chain.
-                        free_linkedlist(head);
-                        table->overflow_buckets[index] = NULL;
-                        return;
-                    }
-                    else
-                    {
-                        // This is somewhere in the chain.
-                        prev->next = curr->next;
-                        curr->next = NULL;
-                        free_linkedlist(curr);
-                        table->overflow_buckets[index] = head;
-                        return;
-                    }
-                }
-
-                curr = curr->next;
-                prev = curr;
-            }
-        }
-    }
-}
-
-void print_search(HashTable *table, char *key)
-{
-    char *val;
-
-    if ((val = ht_search(table, key)) == NULL)
-    {
-        printf("Key:%s does not exist\n", key);
-        return;
-    }
-    else
-    {
-        printf("Key:%s, Value:%s\n", key, val);
-    }
-}
-
-void print_table(HashTable *table)
-{
-    printf("\nHash Table\n-------------------\n");
-
-    for (int i = 0; i < table -> size; i++)
-    {
-        if (table -> items[i])
-        {
-            printf("Index:%d, Key:%s, Value:%s\n", i, table -> items[i] -> key, table -> items[i] -> value);
-        }
-    }
-
-    printf("-------------------\n\n");
-}
-
-int main()
-{
-    HashTable *ht = create_table(CAPACITY);
-    ht_insert(ht, (char *)"1", (char *)"First address");
-    ht_insert(ht, (char *)"2", (char *)"Second address");
-    ht_insert(ht, (char *)"Hel", (char *)"Third address");
-    ht_insert(ht, (char *)"Cau", (char *)"Fourth address");
-    print_search(ht, (char *)"1");
-    print_search(ht, (char *)"2");
-    print_search(ht, (char *)"3");
-    print_search(ht, (char *)"Hel");
-    print_search(ht, (char *)"Cau"); // Collision!
-    print_table(ht);
-    ht_delete(ht, (char *)"1");
-    ht_delete(ht, (char *)"Cau");
-    print_table(ht);
-    free_table(ht);
-    return 0;
-}
-
+$ amonkeyprogrammer@ubuntu:~/0x1A. Hash tables$ gcc -Wall -pedantic -Werror -Wextra 6-main.c 0-hash_table_create.c 1-djb2.c 2-key_index.c 3-hash_table_set.c 4-hash_table_get.c 5-hash_table_print.c 6-hash_table_delete.c -o g
+$ amonkeyprogrammer@ubuntu:~/0x1A. Hash tables$ valgrind ./g
+==6621== Memcheck, a memory error detector
+==6621== Copyright (C) 2002-2013, and GNU GPL'd, by Julian Seward et al.
+==6621== Using Valgrind-3.10.1 and LibVEX; rerun with -h for copyright info
+==6621== Command: ./g
+==6621== 
+{'Betty': 'Holberton', 'mentioner': 'Jennie', 'hetairas': 'Jennie Z Chu', 'python': 'awesome', 'Jennie': 'and Jay love asm', '98': 'Battery Street', 'N': 'queens', 'c': 'fun', 'Tim': 'Britton', 'Asterix': 'Obelix'}
+==6621== 
+==6621== HEAP SUMMARY:
+==6621==     in use at exit: 0 bytes in 0 blocks
+==6621==   total heap usage: 37 allocs, 37 frees, 8,646 bytes allocated
+==6621== 
+==6621== All heap blocks were freed -- no leaks are possible
+==6621== 
+==6621== For counts of detected and suppressed errors, rerun with: -v
+==6621== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+$ amonkeyprogrammer@ubuntu:~/0x1A. Hash tables$
 ```
-
-
-This code will produce the following output:
-
-```
-Output
-Key:1, Value:First address
-Key:2, Value:Second address
-Key:3 does not exist
-Key:Hel, Value:Third address
-Key:Cau does not exist
-
-Hash Table
--------------------
-Index:49, Key:1, Value:First address
-Index:50, Key:2, Value:Second address
-Index:281, Key:Hel, Value:Third address
--------------------
-
-Hash Table
--------------------
-Index:50, Key:2, Value:Second address
-Index:281, Key:Hel, Value:Third address
--------------------
-
-```
-
-`ht_insert()`, `ht_search()`, and `ht_delete` behave as expected.
