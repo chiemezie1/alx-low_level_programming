@@ -5,14 +5,12 @@
 # OBJ: the .o files
 # NAME: the name of the executable
 # RM: the command to remove files
-# CFLAGS: your favorite compiler flags
 
 CC = gcc
 SRC = main.c school.c
 OBJ = $(SRC:.c=.o)
 NAME = school
 RM = rm -f
-CFLAGS = -Wall -Werror -Wextra -pedantic
 
 # Default rule
 all: $(NAME)
