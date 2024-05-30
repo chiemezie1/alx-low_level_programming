@@ -30,11 +30,11 @@ clean:
 	$(RM) *~ $(NAME)
 
 # Rule to delete the object files (same as clean)
-oclean: clean
+oclean:
+	$(RM) $(OBJ)
 
 # Rule to delete the executable and object files
-fclean: clean
-	$(RM) $(NAME)
+fclean: clean oclean
 
 # Rule to force recompilation of all source files
 re: fclean all
