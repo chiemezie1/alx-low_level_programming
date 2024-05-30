@@ -23,9 +23,9 @@ $(NAME): $(OBJ)
 %.o: %.c
 	$(CC) -c $< -o $@
 
-# Rule to delete Emacs and Vim temporary files
+# Rule to delete all Emacs and Vim temporary files and object files
 clean:
-	-$(RM) *~ \#*
+	$(RM) $(OBJ)
 
 # Rule to delete the object files (same as clean)
 oclean: clean
