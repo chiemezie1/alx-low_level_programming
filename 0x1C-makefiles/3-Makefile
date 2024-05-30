@@ -4,10 +4,10 @@
 # SRC: the .c files
 # OBJ: the .o files
 # NAME: the name of the executable
-# RM: the program to delete files
+# RM: the command to remove files
 
 CC = gcc
-SRC = $(wildcard *.c)
+SRC = main.c school.c
 OBJ = $(SRC:.c=.o)
 NAME = school
 RM = rm -f
@@ -27,13 +27,12 @@ $(NAME): $(OBJ)
 clean:
 	-$(RM) *~ \#*
 
-# Rule to delete object files
-oclean:
-	-$(RM) $(OBJ)
+# Rule to delete the object files (same as clean)
+oclean: clean
 
-# Rule to delete Emacs and Vim temporary files, the executable, and object files
-fclean: clean oclean
-	-$(RM) $(NAME)
+# Rule to delete the executable and object files
+fclean: clean
+	$(RM) $(NAME)
 
 # Rule to force recompilation of all source files
 re: fclean all
